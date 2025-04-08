@@ -7,7 +7,7 @@ from PIL import Image
 from torch import nn
 from torch.utils.data import DataLoader, Dataset
 from tqdm import tqdm
-from transformers import AutoModelForCausalLM, GPT2Config, Qwen2Config, Qwen2VLConfig, set_seed
+from transformers import AutoModelForCausalLM, Qwen2Config, set_seed
 from datasets import load_dataset
 from typing import Dict, Any, Optional
 
@@ -177,7 +177,7 @@ if __name__ == "__main__":
 	num_classes = len(colormap)
 
 	# Define batch size
-	batch_size = 16
+	batch_size = 32
 
 	# === Prepare Dataset and DataLoader for Training ===
 	train_dataset: PixelSequenceDataset = PixelSequenceDataset(
@@ -228,10 +228,9 @@ if __name__ == "__main__":
 	# Define Qwen-2 model configuration as a dictionary
 	qwen2_config = {
 		"vocab_size": num_classes,
-		"architectures": ["Qwen2ForCausalLM"],
-		"hidden_size": 768,
-		"intermediate_size": 1024,
-		"num_hidden_layers": 2,
+		"hidden_size": 512,
+		"intermediate_size": 896,
+		"num_hidden_layers": 4,
 		"num_attention_heads": 32,
 		"num_key_value_heads": 32,
 		"hidden_act": "gelu_new",
@@ -241,12 +240,11 @@ if __name__ == "__main__":
 		"attention_dropout": 0.1,
 		"pad_token_id": None,
 		"eos_token_id": None,
-		"n_ctx": 128,
 	}
 
 
 	# Load GPT-2 model configuration from dictionary
-	config_gpt2 = GPT2Config.from_dict(gpt2_config)
+	# config_gpt2 = GPT2Config.from_dict(gpt2_config)
 	config_qwen2 = Qwen2Config.from_dict(qwen2_config)
 
 	config = config_qwen2
@@ -263,17 +261,16 @@ if __name__ == "__main__":
 
 	# Training Arguments
 
-	epochs = 50																# Number of training epochs
+	epochs = 100															# Number of training epochs
 	learning_rate = 1e-3													# Learning rate for optimizer
 	device = torch.device("cuda" if torch.cuda.is_available() else "cpu")	# Check if CUDA is available for GPU
-	save_dir = "/home/r12921068/checkpoints"								# Directory to save model checkpoints
+	save_dir = "checkpoints"												# Directory to save model checkpoints
 
 	# Loss function and optimizer
 	criterion = nn.CrossEntropyLoss()												# Loss function for classification tasks
 	optimizer = optim.AdamW(model.parameters(), lr=learning_rate, weight_decay=0.1)	# AdamW optimizer with weight decay
 
-	print_parameter(batch_size, epochs, learning_rate, qwen2_config)
-	exit()
+	# print_parameter(batch_size, epochs, learning_rate, qwen2_config)
 
 	# Create save directory if it doesn't exist
 	os.makedirs(save_dir, exist_ok=True)
@@ -374,5 +371,5 @@ if __name__ == "__main__":
 
 	print(f"Reconstructed results saved to {output_file}")	# Confirmation message
 
-	predicted_images = [pixel_to_image(sequence, colormap) for sequence in results]
-	show_images(predicted_images)
+	# predicted_images = [pixel_to_image(sequence, colormap) for sequence in results]
+	# show_images(predicted_images)
